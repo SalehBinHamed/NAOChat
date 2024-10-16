@@ -30,7 +30,7 @@ atexit.register(save_history)
 class Talker(cmd.Cmd, object):
     """ Simple interactive talk program """
 
-    def __init__(self, robot, language="English", volume=100):
+    def __init__(self, robot, language="English", volume=100, speed=70):
         #super(Talker, self).__init__()
         cmd.Cmd.__init__(self)
 
@@ -82,9 +82,6 @@ class Talker(cmd.Cmd, object):
             print("Error creating proxy to ALTracker")
             print(e.message)
             exit(0)
-
-
-            
         
         if language in self._tts.getAvailableLanguages():
             self._tts.setLanguage(language)
@@ -92,7 +89,7 @@ class Talker(cmd.Cmd, object):
             self._tts.setLanguage("English")
         self._audio.setOutputVolume(volume)
 
-        self._modifier = "\RSPD=75\ "
+        self._modifier = "\RSPD=70\ "
         self._index = 0
 
         self._talk.declareTagForAnimations({
@@ -312,8 +309,46 @@ class Talker(cmd.Cmd, object):
         elif "left" in line: y = 0.5
         else: y = 0
         self._tracker.pointAt("Arms", [1,y,z], 2, 0.4)
+    def do_wave(self, line):
+        self.do_openhand("left")
+        self._tracker.pointAt("LArm", [1,0,4,], 2, 0.4)
+        for y in [-1.5, -0.0, -1.5, 0.0]:
+            self._tracker.pointAt("LArm", [1,-y,4], 2, 0.1)
+        self.do_stand("")
+        self.do_closehand("left")
 
-    
+    def do_dikt(self, line):
+        dikt = [
+            "I Lundbergs värld, där juleljuset brinner klart,",
+            "En saga av framgång i vinterns fridfulla natt.",
+            "",
+            "I Fastighetsbarometern N. K. I. står vi som stjärnor högt i glans,",
+            "Vårt bästa resultat någonsin, gick som en dans.",
+            "",
+            "Rekord i Lilla Lundbergsloppet, i både Nkpg och Södertälje,",
+            "Denna underbara dag fylld av förväntansfulla barn och glädje.",
+            "",
+            "Energimålet uppfyllt för 2025, redan i mars vi fick se,",
+            "En framgångssaga och en riktig hållbarhetssuccé.",
+            "",
+            "Vi är ett Great Place to Work, för oss hjärtat slår,",
+            "Vi trivs och har roligt tillsammans varje dag som går.",
+            "",
+            "Att ha Sveriges nöjdaste hyresgäster, klingar som den vackraste sång,",
+            "Två kundkristaller i AktivBo, det ska vi fira natten lång.",
+            "",
+            "Så låt julestjärnan lysa över varje lokal och bo,",
+            "Där Lundbergs Fastigheter skapar drömmar som får gro.",
+            "",
+            "God jul och ett gott nytt år, vår saga är klar,",
+            "I glädje och framgång, i varje stund vi har.",
+        ]
+
+        for line in dikt:
+            self._talk.post.say(self._modifier + str(line))
+            time.sleep(4)
+
+
     def do_look(self, line):
         line = line.lower()
         if "down" in line: z = -0.1
@@ -413,17 +448,17 @@ class Talker(cmd.Cmd, object):
 
     def do_walkf(self, line):
         dist = float(line) if line else 0.1
-        self._motion.walkTo(dist,0,0)
+        self._motion.moveTo(dist,0,0)
 
     def do_walkb(self, line):
         dist = float(line) if line else 0.1
-        self._motion.walkTo(-dist,0,0)
+        self._motion.moveTo(-dist,0,0)
 
     def do_turn(self,line):
         line = line.lower()
         turn = 90 if line == "right" else -90 if line == "left" else float(line)
         rad = -3.14 * turn/180
-        self._motion.walkTo(0,0,rad)
+        self._motion.moveTo(0,0,rad)
 
     def do_EOF(self, line):
         return True

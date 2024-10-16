@@ -68,10 +68,14 @@ match params["listener"].lower():
     case _: raise Exception("Incorrect 'listener' specified! Use 'terminal', 'timer' or 'mic'.")
 
 # Start conversation
-while True:
-    if params.get("print_listening", True): print(params.get("print_listening", "Listening..."))
-    heard = listener()
-    if params.get("print_heard", True): print(f"Heard: {heard}")
-    if heard != "":
-        response = chatter(heard)
-        talker(response)
+try:
+    while True:
+        if params.get("print_listening", True): print(params.get("print_listening", "Listening..."))
+        heard = listener()
+        if params.get("print_heard", True): print(f"Heard: {heard}")
+        if heard != "":
+            response = chatter(heard)
+            talker(response)
+except (KeyboardInterrupt, EOFError):
+    print("\n\nExiting...")
+    sys.exit()
