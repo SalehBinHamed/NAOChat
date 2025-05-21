@@ -1,10 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import openai
 import speech_recognition as sr
 import sounddevice
 from io import BytesIO
 
 class Listener():
-    def __init__(self, language: str="en", default_mic: bool=True, use_whisper: bool = False):
+    def __init__(self, language="en", default_mic=True, use_whisper=False):
         """
         Creates a Listener object for speech-to-text
 
@@ -23,7 +26,7 @@ class Listener():
         else:
             print("Please select a microphone from this list:")
             for i, m in enumerate(sr.Microphone.list_microphone_names()):
-                print(f"   {i}: {m}")
+                print("   {}: {}".format(i, m))
             id = int(input("Select an index (-1 for default): "))
             if id == -1:
                 self.mic = sr.Microphone()
@@ -32,7 +35,7 @@ class Listener():
         with self.mic as mic:
             self.r.adjust_for_ambient_noise(mic)
 
-    def recognize_whisper_api(self, audio_data: sr.AudioData):
+    def recognize_whisper_api(self, audio_data):
         """
         Transcribes the given audio data into text via Whisper.
         Adapted from recognizer_instance.recognize_whisper_api
@@ -63,13 +66,13 @@ class Listener():
 if __name__ == "__main__":
     from Chatter import Chatter
     name = "Pepper"
-    swe_intro = f"Du är den mänskliga roboten {name}. En NAO-modellrobot byggd av Softbank och programmerad av FIA Robotics. Din uppgift är att hålla en intressant konversation med en grupp människor. Du får max svara med två meningar."
-    eng_intro = f"You are the humanoid robot {name}. A NAO model robot built by Softbank and programmed by FIA Robotics. Your task is to hold an interesting conversation with a group of humans. You can at most answer with two sentences"
+    swe_intro = "Du är den mänskliga roboten {}. En NAO-modellrobot byggd av Softbank och programmerad av FIA Robotics. Din uppgift är att hålla en intressant konversation med en grupp människor. Du får max svara med två meningar.".format(name)
+    eng_intro = "You are the humanoid robot {}. A NAO model robot built by Softbank and programmed by FIA Robotics. Your task is to hold an interesting conversation with a group of humans. You can at most answer with two sentences".format(name)
     chatter = Chatter(eng_intro,stream=True,name=name)
     listener = Listener(language="en",default_mic=False,use_whisper=False) # Change to 'sv' for english
     while(True):
         heard = listener()
-        print(f"Heard: {heard}")
+        print("Heard: {}".format(heard))
         if heard != "":
             response = chatter(heard)
-            print(f"Response: {response}")
+            print("Response: {}".format(response))

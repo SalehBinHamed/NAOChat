@@ -1,19 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import openai
 import time
+import sys
 
 class Chatter:
     def __init__(self, 
-            chat_prompt: str = "You are a virtual assistant", 
-            chat_horison: int = 10, 
-            chat_tokens: int = 100,
-            temp: float = 0.5,
-            stream = False, 
-            filt_prompt: str = "Who should respond to this? Reply with 'USER', 'ASSISTANT' or 'BOTH'",
-            filt_horizon: int = 1, 
-            filt_name: str = "asssistant",
-            filt_keys: list[str] = ["ASSISTANT","BOTH"],
-            filt_tokens: int = 5,
-            chat_name: str = "assistant"):
+            chat_prompt="You are a virtual assistant", 
+            chat_horison=10, 
+            chat_tokens=100,
+            temp=0.5,
+            stream=False, 
+            filt_prompt="Who should respond to this? Reply with 'USER', 'ASSISTANT' or 'BOTH'",
+            filt_horizon=1, 
+            filt_name="asssistant",
+            filt_keys=None,
+            filt_tokens=5,
+            chat_name="assistant"):
         """
         Creates a Chatter object for natural communication with ChatGPT
 
@@ -26,10 +30,13 @@ class Chatter:
             filt_prompt (str): The prompt for the filter which decides if a response should be given.
             filt_horizon (int): How many messages are used to decide if to respond. A value <= 0 turns of filtering.
             filt_name (str): What the chatter is called when deciding to filter. The user is always called 'user'.
-            filt_keys (list[str]): If any of the keys are returned by filter, chatter will respond.
+            filt_keys (list): If any of the keys are returned by filter, chatter will respond.
             filt_tokens (int): How many tokens the filter might return. Will be a hard cut if reached. 
             chat_name (str): What the chatter is called by itself when stitching prompts.
         """
+        if filt_keys is None:
+            filt_keys = ["ASSISTANT", "BOTH"]
+            
         if not openai.api_key:
             openai.api_key = open("openai.key").read().strip()
         self.stream = stream 
@@ -49,7 +56,7 @@ class Chatter:
         self.filt_keys = filt_keys
         self.filt_tokens = filt_tokens
 
-    def get_response(self) -> str:
+    def get_response(self):
         """
         Return a response based on the last chat_horison messages
 
@@ -69,13 +76,13 @@ class Chatter:
             time.sleep(0.1)
             return self.get_response()
 
-    def stream_response(self) -> "Generator[str,None,None]":
+    def stream_response(self):
         """
         Yields a response based on the last chat_horison messages
         Faster than get_response
 
         Returns:
-            Generator[str,None,None] : Yields the tokenised response
+            Generator: Yields the tokenised response
         """
         try:
             for chunk in openai.ChatCompletion.create(
@@ -88,16 +95,19 @@ class Chatter:
                 yield chunk.choices[0].delta.get("content","")
         except openai.APITimeoutError:
             time.sleep(0.1)
-            return self.stream_response()
+            # Cannot use 'return' with argument in a generator
+            # Use a recursive approach instead
+            for item in self.stream_response():
+                yield item
     
-    def should_respond(self) -> bool:
+    def should_respond(self):
         """
         Concludes if Chatter should reply to the last received message.
         Does this via evaluating with filt_prompt. Should respond if any filt_key is returned. 
         Based on the last filt_horizon messages. Setting filt_horizon <= 0 turns of filtering
 
         Returns:
-            bool : Wheter to respond or not
+            bool: Wheter to respond or not
         """
         try:
             if(self.filt_horizon <= 0): return True
@@ -115,14 +125,13 @@ class Chatter:
             time.sleep(0.1)
             return self.should_respond()
     
-    def __call__(self, message: str) -> str:
-        
+    def __call__(self, message):
         """
         Returns a reply to message based on the last chat_horison messages
         if it concludes it should based on the last filt_horizon messages
 
         Returns one of:
-            str/Generator[str,None,None] : The response or a genereator thereof if stream is true. Empty if no response
+            str/Generator: The response or a genereator thereof if stream is true. Empty if no response
         """
         try:
             self.messages.append(
@@ -147,21 +156,22 @@ class Chatter:
                 self.messages.append({"role": "assistant", "content": response})
             return res(self)
         except KeyError as KE: # In case the model is overloaded
-            return f"{KE}"
+            return "{}".format(KE)
                 
 if __name__ == "__main__":
     name = "Pepper"
-    f"You will be given a conversation between a group of humans, user, and a robot called {name}. Your task is to conclude if the last message from the humans is directed at {name} or to themselves. If it's directed at the humans respond only with 'HUMANS'. If it's directed at {name} respond only with '{name.upper()}'. If it could be answered by either, respond with 'BOTH'."
-    swe_intro = f"Du är den mänskliga roboten {name}. En NAO-modellrobot byggd av Softbank och programmerad av FIA Robotics. Din uppgift är att hålla en intressant konversation med en grupp människor. Du får max svara med två meningar."
-    eng_intro = f"You are the humanoid robot {name}. A NAO model robot built by Softbank and programmed by FIA Robotics. Your task is to hold an interesting conversation with a group of humans. You can at most answer with two sentences"
+    filter_prompt = "You will be given a conversation between a group of humans, user, and a robot called {}. Your task is to conclude if the last message from the humans is directed at {} or to themselves. If it's directed at the humans respond only with 'HUMANS'. If it's directed at {} respond only with '{}'. If it could be answered by either, respond with 'BOTH'.".format(name, name, name, name.upper())
+    swe_intro = "Du är den mänskliga roboten {}. En NAO-modellrobot byggd av Softbank och programmerad av FIA Robotics. Din uppgift är att hålla en intressant konversation med en grupp människor. Du får max svara med två meningar.".format(name)
+    eng_intro = "You are the humanoid robot {}. A NAO model robot built by Softbank and programmed by FIA Robotics. Your task is to hold an interesting conversation with a group of humans. You can at most answer with two sentences".format(name)
     stream_bot = Chatter(base_prompt=swe_intro,stream=True,name=name)
     chunk_bot = Chatter(base_prompt=swe_intro,name=name)
     while True:
         message = input("User: ")
         # Stream bot first
-        print(f"StreamBot: ",end="")
+        sys.stdout.write("StreamBot: ")
         for i in stream_bot(message):
-            print(i, end="")
-        print()
+            sys.stdout.write(i)
+            sys.stdout.flush()
+        print("")
         # Chunk bot second
-        print(f"ChunkBot: {chunk_bot(message)}")
+        print("ChunkBot: {}".format(chunk_bot(message)))

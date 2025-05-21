@@ -54,3 +54,4 @@ Three notworthy parameters you can set for any config are:
 - `talker=speaker` to use your computers speakers.
 - `listener=mic` to use your computers microphone. 
 - `talker=NAO` and `ip=123.456.789` (replaced with your NAO-IP) to talk from a NAO robot. This requires the [NAO Setup](src/NAO/README.md).
+

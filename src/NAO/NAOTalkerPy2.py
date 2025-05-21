@@ -36,51 +36,51 @@ class Talker(cmd.Cmd, object):
 
         try:
             self._posture =  ALProxy("ALRobotPosture", robot, 9559)
-        except Exception, e:
-            print("Error creating proxy to ALPosture for "+robot)
-            print(e.message)
+        except Exception as e:
+            print("Error creating proxy to ALPosture for " + robot)
+            print(e)
             exit(0)
         try:
             self._tts = ALProxy("ALTextToSpeech", robot, 9559)
-        except Exception, e:
+        except Exception as e:
             print("Error creating proxy to ALTextToSpeech for " + robot)
-            print(e.message)
+            print(e)
             exit(0)
         try:
             self._talk = ALProxy("ALAnimatedSpeech", robot, 9559)
-        except Exception, e:
+        except Exception as e:
             print("Error creating proxy to ALAnimatedSpeech for " + robot)
-            print(e.message)
+            print(e)
             exit(0)
         try:
             self._audio = ALProxy("ALAudioDevice", robot, 9559)
-        except Exception, e:
+        except Exception as e:
             print("Error creating proxy to ALAudioDevice for " + robot)
-            print(e.message)
+            print(e)
             exit(0)
         try:
             self._motion = ALProxy("ALMotion", robot, 9559)
-        except Exception, e:
+        except Exception as e:
             print("Error creating proxy to ALMotion for " + robot)
-            print(e.message)
+            print(e)
             exit(0)
         try:
             self._behavior = ALProxy("ALBehaviorManager", robot, 9559)
-        except Exception, e:
+        except Exception as e:
             print("Error creating proxy to ALBehaviorManager")
-            print(e.message)
+            print(e)
             exit(0)
         try:
             self._leds = ALProxy("ALLeds", robot, 9559)
-        except Exception, e:
+        except Exception as e:
             print("Error creating proxy to ALLeds")
-            print(e.message)
+            print(e)
             exit(0)
         try:
             self._tracker = ALProxy("ALTracker", robot, 9559)
-        except Exception, e:
+        except Exception as e:
             print("Error creating proxy to ALTracker")
-            print(e.message)
+            print(e)
             exit(0)
         
         if language in self._tts.getAvailableLanguages():

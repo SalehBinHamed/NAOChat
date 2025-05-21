@@ -2,8 +2,8 @@
 talker: terminal
 listener: terminal
 stream: true
-language: en
-name: Mia
+language: ar
+name: Saleh
 print_listening: "User: "
 print_heard: ""
 mood: happy

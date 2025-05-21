@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  nao-test:
+    platform: linux/amd64  # Use x86_64 platform for compatibility with NAOqi SDK
+    image: python:2.7
+    volumes:
+      - ~/Desktop/pynaoqi:/pynaoqi
+      - ./test_nao_speech.py:/app/test_nao_speech.py
+    working_dir: /app
+    network_mode: "host"
+    command: >
+      bash -c "
+        export PYTHONPATH=/pynaoqi &&
+        python test_nao_speech.py 192.168.100.172 Arabic 100
+      "
